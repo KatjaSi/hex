@@ -7,9 +7,10 @@ class Hex:
     """
     Main class for the Hex Game interface
     """
-    POLYGON_SIZE = 30
+    
     WIDTH =1000
     HEIGH = 900
+    POLYGON_SIZE = 30
 
     def __init__(self, root = Tk(), size=3, board_view = None) -> None:
         self.root = root
@@ -23,10 +24,12 @@ class Hex:
         self.canvas = Canvas(self.root, width=Hex.WIDTH, heigh = Hex.HEIGH)
         self.canvas.pack()
         self.draw_grid()
-        #self.canvas.bind('<Button-1>', self.listener.on_canvas_click)
         self.canvas.bind('<Button-1>', self.on_canvas_click)
-        
         self.root.title("Hex")
+        self.player_label = Label(text = "BLACK's turn", font=36)
+        self.player_label.place(x=20, y=40)
+        self.won_label = Label(text = "", font=72)
+        self.won_label.place(x=20, y=80)
         self.root.mainloop()
 
     def get_hex_corner_coord(self, center, i):
@@ -36,9 +39,9 @@ class Hex:
         y = center[1] + Hex.POLYGON_SIZE*math.sin(angle_rad)
         return x, y
         
-    def draw_polygon(self, center):
+    def draw_polygon(self, center, fill):
         coords = [self.get_hex_corner_coord(center, i) for i in range(6)]
-        self.canvas.create_polygon(coords, fill = "grey", outline = "black")
+        self.canvas.create_polygon(coords, fill = fill, outline = "#777777")
 
     def board_index_to_center(self, index):
         """
@@ -54,18 +57,23 @@ class Hex:
     def draw_grid(self):
         for i in range(self.size):
             for j in range(self.size):
-                self.draw_polygon(self.board_index_to_center((i,j)))
+                if i == 0 and j == self.size-1 or i == 0 and j == 0 or i == self.size-1 and j == self.size-1 or i == self.size-1 and j == 0:
+                    fill = "#998888"
+                elif j == 0 or j == self.size-1:
+                    fill = "#bbaaaa" #red ish
+                elif i == 0 or i == self.size-1:
+                    fill = "#999999" # black ish
+                else:
+                    fill = "#aaaaaa"
+                self.draw_polygon(self.board_index_to_center((i,j)), fill = fill)
+    
 
     def on_canvas_click(self, event):
         item = self.canvas.find_closest(event.x, event.y)
-        #print(item[0])
-        self.canvas.itemconfig(item, fill='red')
-        winsound.Beep(200, 20)
         self.listener.on_canvas_click(event, item)
     
     def add_listener(self, listener):
         self.listener = listener
 
-
-#hex = Hex(size=10)
-#hex.game_loop()
+    def end_game(self):
+        self.canvas.unbind('<Button-1>')

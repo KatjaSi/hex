@@ -49,7 +49,7 @@ class Game:
     def is_cell_SE(self, pos):
         return pos[0] == len(self.board)-1
 
-    def is__cell_SW(self, pos):
+    def is_cell_SW(self, pos):
         return pos[1] == 0
 
     def make_move(self, pos):
@@ -88,6 +88,34 @@ class Game:
                 self.player_to_move = Player.RED
             else:
                 self.player_to_move = Player.BLACK
+
+    def black_is_won(self):
+        # black wants to connect NW && SE
+        for u in self.black_unions:
+            nw = 0
+            se = 0
+            for cell in u:
+                if self.is_cell_NW(cell):
+                    nw +=1
+                elif self.is_cell_SE(cell):
+                    se +=1
+            if nw > 0 and se > 0:
+                return True
+        return False
+
+    def red_is_won(self):
+        # black wants to connect NE && SW
+        for u in self.red_unions:
+            ne = 0
+            sw = 0
+            for cell in u:
+                if self.is_cell_NE(cell):
+                    ne +=1
+                elif self.is_cell_SW(cell):
+                    sw +=1
+            if ne > 0 and sw > 0:
+                return True
+        return False
 
     def get_legal_moves(self):
         return [pos for pos in self.empty_cells]
