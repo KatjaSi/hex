@@ -1,4 +1,4 @@
-from game import Game, Player
+from hexgame import HexGame, Player
 from gui import Hex
 
 class Controller:
