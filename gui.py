@@ -30,6 +30,8 @@ class Hex:
         self.player_label.place(x=20, y=40)
         self.won_label = Label(text = "", font=72)
         self.won_label.place(x=20, y=80)
+        self.generate_move_button = Button(text = "Generate Move", font=36, command=self.generate_move)
+        self.generate_move_button.place(x=20, y=140)
         self.root.mainloop()
 
     def get_hex_corner_coord(self, center, i):
@@ -66,6 +68,9 @@ class Hex:
                 else:
                     fill = "#aaaaaa"
                 self.draw_polygon(self.board_index_to_center((i,j)), fill = fill)
+
+    def generate_move(self):
+        self.listener.on_generate_move()
     
 
     def on_canvas_click(self, event):

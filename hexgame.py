@@ -1,150 +1,230 @@
 """
 Module for game board and gam cell representation
 """
-from enum import Enum
 from copy import deepcopy
-from game import Game
+from typing import List, Tuple
+from statemanager import StateManager
+import numpy as np
+from itertools import chain
 
-class Player(Enum):
-    BLACK = 1
-    RED = 2
+
+from statemanager import StateManager
+
+class HexGameState:
+    
+    def __init__(self, player, board, black_unions, red_unions) -> None:
+        self.player = player
+        self.board = board
+        self.black_unions = black_unions
+        self.red_unions = red_unions
+    
+    def to_1D(self):
+        return  np.array(list(chain.from_iterable([[self.player]]+[list(chain.from_iterable(self.board))])))
+
+    def __str__(self):
+        return f"player: {self.player}\nboard: {self.board}\nblack unions: {self.black_unions}\nred unions: {self.red_unions}"
  
-# TODO inherit from Game
-class HexGame():
+class HexStateManager:
 
-    def __init__(self, size, board=None):
-        self.size = size
-        # board of cells where each cell knows its position on the board and position of its neighbours on the board
-        if board is None:
-            self.board = [[0 for j in range(size)] for i in range(size)]
-            self.empty_cells= [(i,j)for i in range(size) for j in range(size)]
-            self.player_to_move = Player.BLACK
+    NEIGHBOUR_INDICES = [(-1,0), (-1,1), (0,-1), (0,1), (1,-1), (1,0)]
+
+    @staticmethod
+    def generate_initial_state(size) -> HexGameState:
+        board = [[0 for _ in range(size)] for _ in range(size)]
+        return HexGameState(player=1, board=board, black_unions=list(), red_unions=list())
+    
+    @staticmethod
+    def generate_child_states(state: HexGameState, limit: int|None = None) -> List[HexGameState]:
+        current_board_state = deepcopy(state.board)
+        game_states = list()
+        size = len(current_board_state)
+        empty_cells= [(i,j)for i in range(size) for j in range(size) if current_board_state[i][j]==0]
+        for pos in empty_cells:
+            hgs = HexStateManager.generate_child_state(state=state, action=pos)
+            game_states.append(hgs)   
+        return game_states
+
+    @classmethod
+    def generate_child_state(cls, state: HexGameState, action: Tuple[int,int]) -> HexGameState:
+        pos = action
+        player = state.player
+        board = deepcopy(state.board)
+        if board[pos[0]][pos[1]]>0:
+            raise Exception("The action is not legal")
         else:
-            self.board = board
-            self.empty_cells= [(i,j)for i in range(size) for j in range(size) if self.board[i][j]==0]
-            player_to_move = (self.size**2 - len(self.empty_cells)) % 2 + 1
-            if player_to_move == 1:
-                self.player_to_move = Player.BLACK
-            else:
-                self.player_to_move = Player.RED
-
-        neighbour_indices = [(-1,0), (-1,1), (0,-1), (0,1), (1,-1), (1,0)]
-        self.neighbours = dict()
-        for i in range(size):
-            for j in range(size):
-                self.neighbours[(i, j)]=list()
-                for ind in neighbour_indices:
-                    if (i+ind[0] >= 0 and i+ind[0] < size  and j+ind[1] >= 0 and j+ind[1] < size):
-                        self.neighbours[(i, j)].append((i+ind[0], j+ind[1]))
-
-        self.players = [Player.BLACK, Player.RED] # black wants to connect NW && SE, red - SW && NE
-        self.black_unions = list()
-        self.red_unions = list()
-
-    def is_cell_NW(self, pos):
-        return pos[0] == 0
-
-    def is_cell_NE(self, pos):
-        return pos[1] == len(self.board)-1
-
-    def is_cell_SE(self, pos):
-        return pos[0] == len(self.board)-1
-
-    def is_cell_SW(self, pos):
-        return pos[1] == 0
-
-    def make_move(self, pos):
-        if self.board[pos[0]][pos[1]]>0:
-            raise Exception("The move is not legal")
+            board[pos[0]][pos[1]] = player
+        unions = None
+        if player == 1:
+            unions = deepcopy(state.black_unions)
         else:
-            self.board[pos[0]][pos[1]] = self.player_to_move.value
-            self.empty_cells.remove((pos[0],pos[1]))
-            # join black or red groups
-            unions = None
-            if self.player_to_move == Player.BLACK:
-                unions = self.black_unions
-            else:
-                unions = self.red_unions
-            sets_to_join = list()
-            for neighbour in self.neighbours[pos]:
-                if self.board[neighbour[0]][neighbour[1]] == self.player_to_move.value:
-                    for s in unions: # find the union that has neigbour cell
-                        if s not in sets_to_join and neighbour in s:
-                            s.add(pos)
-                            sets_to_join.append(s)
-                            break
-            if len(sets_to_join) == 0:
-                s = set()
-                s.add(pos)
-                unions.append(s) #TODO: continue here
-            if len(sets_to_join) > 1:
-                union_of_sets = set().union(*sets_to_join)
-                unions =  [el for el in unions if el not in sets_to_join]
-                unions.append(union_of_sets)
-            if self.player_to_move == Player.BLACK:
-                self.black_unions = unions
-            else:
-                self.red_unions = unions
-            if self.player_to_move == Player.BLACK:
-                self.player_to_move = Player.RED
-            else:
-                self.player_to_move = Player.BLACK
+            unions = deepcopy(state.red_unions)
+        sets_to_join = list()
+        size = len(board)
+        for neighbour in cls.__get_neighbours__(pos, size):
+            if board[neighbour[0]][neighbour[1]] == player:
+                for s in unions: # find the union that has neigbour cell
+                    if s not in sets_to_join and neighbour in s:
+                        s.add(pos)
+                        sets_to_join.append(s)
+                        break
+        if len(sets_to_join) == 0:
+            s = set()
+            s.add(pos)
+            unions.append(s) 
+        if len(sets_to_join) > 1:
+            union_of_sets = set().union(*sets_to_join)
+            unions =  [el for el in unions if el not in sets_to_join]
+            unions.append(union_of_sets)
+        next_player = player % 2 +1
+        if player == 1: 
+            return HexGameState(player=next_player, board=board, black_unions=unions, red_unions=deepcopy(state.red_unions))
+        return HexGameState(player=next_player, board=board, black_unions=deepcopy(state.black_unions), red_unions=unions) 
+    
+    @classmethod
+    def is_game_finished(cls, state: HexGameState) -> bool:
+        return cls.black_is_won(state) or cls.red_is_won(state)
+    
+    @staticmethod
+    def get_all_legal_actions(state: HexGameState) -> List[Tuple[int]]:
+        board = state.board
+        size=(len(board))
+        return [(i,j)for i in range(size) for j in range(size) if board[i][j]==0]
+    
+    @staticmethod
+    def get_all_actions(state: HexGameState) -> List[Tuple[int]]:
+        """
+        Returns the list of all actions, both legal and illegal in the form (0,0), (0,1), ... (n-1,n-1) n is the size of game board
+        """
+        board = state.board
+        size=(len(board))
+        return [(i,j)for i in range(size) for j in range(size)]
+    
+    @staticmethod
+    def get_player(state: HexGameState) -> int:
+        return state.player
 
-    def black_is_won(self):
+    @classmethod
+    def black_is_won(cls, state: HexGameState):
         # black wants to connect NW && SE
-        for u in self.black_unions:
+        size = len(state.board)
+        for u in state.black_unions:
             nw = 0
             se = 0
             for cell in u:
-                if self.is_cell_NW(cell):
+                if cls.__is_cell_NW__(cell, size):
                     nw +=1
-                elif self.is_cell_SE(cell):
+                elif cls.__is_cell_SE__(cell, size):
                     se +=1
             if nw > 0 and se > 0:
                 return True
         return False
-
-    def red_is_won(self):
+    
+    @classmethod
+    def red_is_won(cls, state: HexGameState):
         # black wants to connect NE && SW
-        for u in self.red_unions:
+        size = len(state.board)
+        for u in state.red_unions:
             ne = 0
             sw = 0
             for cell in u:
-                if self.is_cell_NE(cell):
+                if cls.__is_cell_NE__(cell, size):
                     ne +=1
-                elif self.is_cell_SW(cell):
+                elif cls.__is_cell_SW__(cell, size):
                     sw +=1
             if ne > 0 and sw > 0:
                 return True
         return False
 
-    def get_legal_moves(self):
-        return [pos for pos in self.empty_cells]
+    @staticmethod   
+    def __is_cell_NW__(pos, size=None):
+        return pos[0] == 0
 
-    def generate_successor_board_states(self):
-        current_board_state = deepcopy(self.board)
-        board_states = list()
-        for pos in self.empty_cells:
-            board = deepcopy(current_board_state)
-            board[pos[0]][pos[1]] = self.player_to_move.value
-            board_states.append(board)
-        return board_states
+    @staticmethod  
+    def __is_cell_NE__(pos, size):
+        return pos[1] == size-1
+
+    @staticmethod  
+    def __is_cell_SE__(pos, size):
+        return pos[0] == size-1
+
+    @staticmethod  
+    def __is_cell_SW__(pos, size=None):
+        return pos[1] == 0
+
+    @staticmethod     
+    def __transpose__(board):
+        size = len(board)
+        return [[board[j][i] for j in range(size)] for i in range(size)]
+    
+    @classmethod  
+    def __get_neighbours__(cls, pos:Tuple[int, int], size, condition: bool|None = None) -> List[Tuple[int,int]]:
+        i, j = pos
+        neighbours = list()
+        for ind in cls.NEIGHBOUR_INDICES:
+            if (i+ind[0] >= 0 and i+ind[0] < size  and j+ind[1] >= 0 and j+ind[1] < size):
+                neighbours.append((i+ind[0], j+ind[1]))
+        return neighbours
+    
+    @staticmethod
+    def __intersection__(lst1, lst2):
+        return list(set(lst1) & set(lst2))
+
+    
+    @staticmethod
+    def get_winner(state: Tuple):
+        return 1 if HexStateManager.black_is_won(state) else 2
+
+class HexGame():
+
+    def __init__(self, size):
+        self.state = HexStateManager.generate_initial_state(size=size)
+        self.size = len(self.state.board)
+        self.state_manager = HexStateManager
+
+    def make_move(self, pos):
+        self.state = self.state_manager.generate_child_state(state=self.state, action=pos)
+
+    def black_is_won(self):
+        # black wants to connect NW && SE
+        return self.state_manager.black_is_won(self.state)
+
+    def red_is_won(self):
+        return self.state_manager.red_is_won(self.state)
+    
+    def get_player_to_move(self):
+        return self.state.player
+
+    def get_legal_moves(self):
+        return HexStateManager.get_all_legal_actions(self.state)
+
+    def is_game_finished(self):
+        return self.red_is_won() or self.black_is_won()
+
+    def get_winner(self):
+        return 1 if self.black_is_won() else 2
 
 
 
 def main() -> None:
-    game = HexGame(3)
-    game.make_move((1,0)) # black
-    game.make_move((0,0)) # red
-    game.make_move((2,0)) # black
-    game.make_move((0,2)) # red
-    game.make_move((1,2)) # b
-    game.make_move((2,2)) # red
-    game.make_move((1,1)) # b
+    #game = HexGame(3)
+    #game.make_move((1,0)) # black
+    #game.make_move((0,0)) # red
+    #game.make_move((2,0)) # black
+    #game.make_move((0,2)) # red
+    #game.make_move((1,2)) # b
+    #game.make_move((2,2)) # red
+    #game.make_move((1,1)) # b
 
-
-
-
+    #state_0 = HexStateManager.generate_initial_state(size=4)
+    #print(state_0)
+    #child_state = HexStateManager.generate_child_state(state=state_0, action=(3,3))
+    #print(child_state)
+    state = HexStateManager.generate_initial_state(size=5)
+    print(state)
+    state1 = HexStateManager.generate_child_state(state=state, action=(0,1))
+    print(state1)
+    state2 = HexStateManager.generate_child_state(state=state1, action=(0,0))
+    print(state2)
 
 if __name__ == '__main__':
     main()
