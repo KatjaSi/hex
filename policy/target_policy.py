@@ -5,6 +5,7 @@ the behavior policy (default policy =  the policy used to perform rollouts) is a
 In this project, a neural network (ANET) constitutes the target policy. It takes a board
 state as input and produces a probability distribution over all possible moves (from that state) as output
 """
+import random
 import numpy as np
 from random import randint
 from keras import layers
@@ -25,7 +26,8 @@ def random_target_policy(state: Tuple[int]|HexGameState, actions: List[Tuple[int
 
 class ANET():
 
-    def __init__(self, model=None, input_size=17) -> None:
+    def __init__(self, model=None, input_size=17, eps=0.2) -> None:
+        self.eps = eps
         if model is None:
             self.model = Sequential()
             self.model.add(layers.Input(shape=(input_size,))) # 1 neuron for player, rest for board
@@ -45,16 +47,24 @@ class ANET():
 
 
     def target_policy(self, state:HexGameState, actions: List[Tuple[int]]|None=None):
+        """
+        With probability ε, a random move is taken; 
+        and with a probability of 1−ε, the move corresponding to the highest value in D is chosen."
+        """
+        eps = self.eps
         probs = self.predict(state.to_1D()) # TODO: ?
-        #probs *= mask  # Zero-out the probabilities of illegal moves
-        #probs /= np.sum(probs) 
         action_anet_outputs = [action[0]*4+action[1] for action in actions]
         mask = [1 if i in action_anet_outputs else 0 for i in range(16)]
         probs = probs *mask
         probs /= np.sum(probs) 
+        
+        if random.random() < eps:
+            action =  random.choice(actions)# random action from the list of all actions
+            return action
+           
         max_index = np.argmax(probs)
-       
-        action = max_index//4, max_index%4 #TODO: generalize
+        action_index = max_index
+        action = action_index//4, action_index%4 #TODO: generalize
 
         return action
     

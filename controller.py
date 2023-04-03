@@ -111,7 +111,18 @@ class ANET_Controller:
             if self.game_model.black_is_won():
                     self.game_view.won_label.config(text = "BLACK won!")
                     self.game_view.end_game()
-                    
+                    return
+
+        else:
+            move = self.anet.target_policy(state=self.game_model.state, actions=self.game_model.get_legal_moves())
+            item = self.board_index_to_item(move)
+            self.game_view.canvas.itemconfig(item, fill='red')
+            self.game_model.make_move(move)
+            self.game_view.player_label.config(text = "BLACK's turn")
+            if self.game_model.red_is_won():
+                    self.game_view.won_label.config(text = "RED won!")
+                    self.game_view.end_game()
+                    return
 
     def on_canvas_click(self, event, item):
         board_index = self.item_to_board_index(item[0])

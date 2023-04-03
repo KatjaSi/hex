@@ -42,14 +42,17 @@ class RBUF:
         """
         i,j = move
         return self.board_size*i+j
+    
+    def save(self, path):
+        np.save(f'{path}/X.npy', self.X)    
         
 
-def run_RL_algorithm(g_a, anet:ANET, rbuf:RBUF):
+def run_RL_algorithm(g_a, anet:ANET, rbuf:RBUF, interval:int):
     rbuf.clear()
-    for _ in range(g_a):
+    for i in range(g_a):
         game = HexGame(4)
         state = HexStateManager.generate_initial_state(size=4) # TODO:generalize
-        mcts = MCTS(SM=HexStateManager, state=state, tree_policy=(max_tree_policy, min_tree_policy), target_policy=anet.target_policy, M=500)
+        mcts = MCTS(SM=HexStateManager, state=state, tree_policy=(max_tree_policy, min_tree_policy), target_policy=anet.target_policy, M=1000)
         while not game.is_game_finished():
             state = mcts.root.state
             mcts.simulate()
@@ -60,10 +63,12 @@ def run_RL_algorithm(g_a, anet:ANET, rbuf:RBUF):
             move = mcts.get_move()
             mcts.reset_root(move)
             game.make_move(move)
-            #print(sum(list(legal_moves_with_visits.values())))
         # train ANET
         anet.fit(*rbuf.get_training_data(), epochs=50)
-        anet.save("anet.h5")
+        if i%interval == 0:
+            anet.save(f"anet{i}.h5")
+    
+    anet.save("anet_final.h5")
 
 #state = HexStateManager.generate_initial_state(size=7)
 #state1D = state.to_1D()
@@ -74,5 +79,6 @@ def run_RL_algorithm(g_a, anet:ANET, rbuf:RBUF):
 #anet = ANET(input_size=17) #1 +7*7
 
 anet = ANET.load("anet.h5")
+anet.eps = 0.2
 rbuf = RBUF(4)
-run_RL_algorithm(8,anet, rbuf)
+run_RL_algorithm(2,anet, rbuf, interval=50)
