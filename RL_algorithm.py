@@ -26,9 +26,12 @@ class RBUF:
         transforms the input information into the distribution over all the moves and then
         adds training case to the buffer
         """
+        max_val = np.max(list(D.values()))
+        for k in D:
+            D[k] -= max_val
         x = state_1D 
         all_y_valls = np.array(list(D.values()))
-        all_y_valls = all_y_valls/max(all_y_valls) # normalize so not to overflow exp
+        #all_y_valls = all_y_valls-max(all_y_valls) # normalize so not to overflow exp
         soft_sum = np.sum(np.exp(all_y_valls))  #TODO: overloading is here! check and fix!
         y = np.array([np.e**D[move]/soft_sum if move in D  else 0 for move in all_moves])
         self.X.append(x)
@@ -53,7 +56,7 @@ def run_RL_algorithm(g_a, anet:ANET, rbuf:RBUF, interval:int):
     for i in range(g_a):
         game = HexGame(4)
         state = HexStateManager.generate_initial_state(size=4) # TODO:generalize
-        mcts = MCTS(SM=HexStateManager, state=state, tree_policy=(max_tree_policy, min_tree_policy), target_policy=anet.target_policy, M=1000)
+        mcts = MCTS(SM=HexStateManager, state=state, tree_policy=(max_tree_policy, min_tree_policy), target_policy=anet.target_policy, M=50)
         while not game.is_game_finished():
             state = mcts.root.state
             mcts.simulate()
