@@ -56,7 +56,7 @@ def run_RL_algorithm(g_a, anet:ANET, rbuf:RBUF, interval:int):
     for i in range(g_a):
         game = HexGame(4)
         state = HexStateManager.generate_initial_state(size=4) # TODO:generalize
-        mcts = MCTS(SM=HexStateManager, state=state, tree_policy=(max_tree_policy, min_tree_policy), target_policy=anet.target_policy, M=50)
+        mcts = MCTS(SM=HexStateManager, state=state, tree_policy=(max_tree_policy, min_tree_policy), target_policy=anet.target_policy, M=600)
         while not game.is_game_finished():
             state = mcts.root.state
             mcts.simulate()
@@ -80,9 +80,9 @@ def run_RL_algorithm(g_a, anet:ANET, rbuf:RBUF, interval:int):
 #prediction = anet.predict(state_1D=state1D)
 #print(prediction)
 
-#anet = ANET(input_size=17) #1 +7*7
+anet = ANET(input_size=17) #1 +7*7
 
-anet = ANET.load("anet.h5")
+#anet = ANET.load("anet.h5")
 anet.eps = 0.2
 rbuf = RBUF(4)
 run_RL_algorithm(200,anet, rbuf, interval=50)
