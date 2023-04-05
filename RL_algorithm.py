@@ -74,7 +74,7 @@ def run_RL_algorithm(g_a, anet:ANET, rbuf:RBUF, interval:int):
         indices = np.random.choice(len(X), batch_size, replace=False)
         X_batch, y_batch = X[indices], y[indices]
 
-        valid_data =  X[-10:], y[:-10] # the last added data
+        valid_data =  X[-10:], y[-10:] # the last added data
         anet.fit(X_batch, y_batch, epochs=50, validation_data=valid_data)
         #anet.fit(*rbuf.get_training_data(), epochs=50)
         print(i)
