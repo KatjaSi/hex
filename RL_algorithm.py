@@ -53,7 +53,7 @@ class RBUF:
 
 def run_RL_algorithm(g_a, anet:ANET, rbuf:RBUF, interval:int):
     rbuf.clear()
-    for i in range(g_a):
+    for i in range(29, g_a):
         game = HexGame(4)
         state = HexStateManager.generate_initial_state(size=4) # TODO:generalize
         mcts = MCTS(SM=HexStateManager, state=state, tree_policy=(max_tree_policy, min_tree_policy), target_policy=anet.target_policy, M=600)
@@ -69,6 +69,7 @@ def run_RL_algorithm(g_a, anet:ANET, rbuf:RBUF, interval:int):
             game.make_move(move)
         # train ANET
         anet.fit(*rbuf.get_training_data(), epochs=50)
+        print(i)
         if i%interval == 0:
             anet.save(f"anet{i}.h5")
     
@@ -80,9 +81,9 @@ def run_RL_algorithm(g_a, anet:ANET, rbuf:RBUF, interval:int):
 #prediction = anet.predict(state_1D=state1D)
 #print(prediction)
 
-anet = ANET(input_size=17) #1 +7*7
+#anet = ANET(input_size=17) #1 +7*7
 
-#anet = ANET.load("anet.h5")
+anet = ANET.load("anet28.h5") #ANET.load("C:\\Users\\Roger\\Desktop\\vaar2023\\hex\\anet28.h5") #C:\Users\Roger\Desktop\vaar2023\anet28.h5
 anet.eps = 0.2
 rbuf = RBUF(4)
-run_RL_algorithm(200,anet, rbuf, interval=50)
+run_RL_algorithm(200,anet, rbuf, interval=2)
