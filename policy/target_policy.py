@@ -13,7 +13,7 @@ from keras import initializers, optimizers
 from keras.models import Model, Sequential, load_model
 from typing import List, Tuple
 from hexgame import HexGameState
-
+import keras.backend as K
 
 def random_target_policy(state: Tuple[int]|HexGameState, actions: List[Tuple[int] | int]):
     """
@@ -39,6 +39,10 @@ class ANET():
             self.model = model
 
     def fit(self, X, y, epochs=10, batch_size=32):
+        x_valid = X[-10:] # 10 last
+        y_valid = y[-10:] # 10 last elements, they will be the new elements , most recently added
+        valid_loss = K.mean(K.categorical_crossentropy(y, self.model.predict(X)))
+        print(f"Validation loss is {valid_loss}")
         self.model.fit(X, y, epochs=epochs, batch_size=batch_size)
 
     def predict(self, state_1D): 

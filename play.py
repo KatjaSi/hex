@@ -15,10 +15,10 @@ anet1.eps = 0
 anet2 = ANET.load("anet0.h5")
 anet2.eps = 0.3
 
-#s_init = HexStateManager.generate_initial_state(size=4)
-#mcts = MCTS(SM=HexStateManager, state=s_init, tree_policy=(max_tree_policy, min_tree_policy), target_policy=anet2.target_policy, M=200)
-#controller = Controller(game_view=game_view, game_model=game, mcts=mcts)
-#controller.start_game()
+s_init = HexStateManager.generate_initial_state(size=4)
+mcts = MCTS(SM=HexStateManager, state=s_init, tree_policy=(max_tree_policy, min_tree_policy), target_policy=anet1.target_policy, M=200)
+controller = Controller(game_view=game_view, game_model=game, mcts=mcts)
+controller.start_game()
 
-anet_controller = ANET_Controller(game_view=game_view, game_model=game, anet1=anet1, anet2=anet2)
-anet_controller.start_game()
+#anet_controller = ANET_Controller(game_view=game_view, game_model=game, anet1=anet1, anet2=anet2)
+#anet_controller.start_game()
