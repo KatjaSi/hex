@@ -46,6 +46,7 @@ class ANET():
             model.add(Dropout(0.5))
             model.add(Dense(16, activation='softmax'))
             model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+            self.model = model
         else:
             self.model = model
 
