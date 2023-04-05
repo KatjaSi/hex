@@ -41,7 +41,7 @@ class ANET():
     def fit(self, X, y, epochs=10, batch_size=32):
         x_valid = X[-10:] # 10 last
         y_valid = y[-10:] # 10 last elements, they will be the new elements , most recently added
-        valid_loss = K.mean(K.categorical_crossentropy(y, self.model.predict(X)))
+        valid_loss = K.mean(K.categorical_crossentropy(y_valid, self.model.predict(x_valid)))
         print(f"Validation loss is {valid_loss}")
         self.model.fit(X, y, epochs=epochs, batch_size=batch_size)
 
