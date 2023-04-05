@@ -1,4 +1,5 @@
 import time
+from typing import Callable
 from hexgame import HexGame
 from gui import Hex
 from mcts import MCTS
@@ -91,11 +92,11 @@ class Controller:
 # Anet controller
 class ANET_Controller:
 
-    def __init__(self, game_view:Hex, game_model:HexGame, anet1:ANET, anet2:ANET):
+    def __init__(self, game_view:Hex, game_model:HexGame, target_policy1:Callable, target_policy2:Callable):
         self.game_view = game_view 
         self.game_model = game_model
-        self.anet1 = anet1
-        self.anet2 = anet2
+        self.target_policy1 = target_policy1
+        self.target_policy2 = target_policy2
         self.game_view.add_listener(self) 
 
     def start_game(self):
@@ -103,7 +104,7 @@ class ANET_Controller:
 
     def on_generate_move(self):
         if self.game_model.get_player_to_move() == 1:
-            move = self.anet1.target_policy(state=self.game_model.state, actions=self.game_model.get_legal_moves())
+            move = self.target_policy1(state=self.game_model.state, actions=self.game_model.get_legal_moves())
             item = self.board_index_to_item(move)
             self.game_view.canvas.itemconfig(item, fill='black')
             self.game_model.make_move(move)
@@ -114,7 +115,7 @@ class ANET_Controller:
                     return
 
         else:
-            move = self.anet2.target_policy(state=self.game_model.state, actions=self.game_model.get_legal_moves())
+            move = self.target_policy2(state=self.game_model.state, actions=self.game_model.get_legal_moves())
             item = self.board_index_to_item(move)
             self.game_view.canvas.itemconfig(item, fill='red')
             self.game_model.make_move(move)
