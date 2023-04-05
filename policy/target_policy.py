@@ -8,7 +8,10 @@ state as input and produces a probability distribution over all possible moves (
 import random
 import numpy as np
 from random import randint
-from keras import layers
+
+from keras.layers import Dense, Dropout
+from keras.regularizers import l2
+
 from keras import initializers, optimizers
 from keras.models import Model, Sequential, load_model
 from typing import List, Tuple
@@ -26,15 +29,23 @@ def random_target_policy(state: Tuple[int]|HexGameState, actions: List[Tuple[int
 
 class ANET():
 
-    def __init__(self, model=None, input_size=17, eps=0.2) -> None:
+    def __init__(self, model=None, input_size=17, eps=0.2,  method="most-probable") -> None:
         self.eps = eps
+        self.method = method
         if model is None:
-            self.model = Sequential()
-            self.model.add(layers.Input(shape=(input_size,))) # 1 neuron for player, rest for board
-            self.model.add(layers.Dense(128, activation='relu', kernel_initializer=initializers.RandomNormal(stddev=0.01), bias_initializer=initializers.Zeros()))
-            self.model.add(layers.Dense(64, activation='relu', kernel_initializer=initializers.RandomNormal(stddev=0.01), bias_initializer=initializers.Zeros()))
-            self.model.add(layers.Dense(units=16, activation='softmax'))
-            self.model.compile(loss='categorical_crossentropy',  optimizer='adam'), 
+            #self.model = Sequential()
+            #self.model.add(layers.Input(shape=(input_size,))) # 1 neuron for player, rest for board
+            #self.model.add(layers.Dense(128, activation='relu', kernel_initializer=initializers.RandomNormal(stddev=0.01), bias_initializer=initializers.Zeros()))
+            #self.model.add(layers.Dense(64, activation='relu', kernel_initializer=initializers.RandomNormal(stddev=0.01), bias_initializer=initializers.Zeros()))
+            #self.model.add(layers.Dense(units=16, activation='softmax'))
+            #self.model.compile(loss='categorical_crossentropy',  optimizer='adam'), 
+            model = Sequential()
+            model.add(Dense(64, input_dim=17, activation='relu', kernel_regularizer=l2(0.001)))
+            model.add(Dropout(0.5))
+            model.add(Dense(32, activation='relu', kernel_regularizer=l2(0.001)))
+            model.add(Dropout(0.5))
+            model.add(Dense(16, activation='softmax'))
+            model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
         else:
             self.model = model
 
@@ -50,7 +61,7 @@ class ANET():
         return output
 
 
-    def target_policy(self, state:HexGameState, actions: List[Tuple[int]]|None=None):
+    def target_policy(self, state:HexGameState, actions: List[Tuple[int]]|None=None, method = None):
         """
         With probability ε, a random move is taken; 
         and with a probability of 1−ε, the move corresponding to the highest value in D is chosen."
@@ -65,9 +76,18 @@ class ANET():
         if random.random() < eps:
             action =  random.choice(actions)# random action from the list of all actions
             return action
-           
-        max_index = np.argmax(probs)
-        action_index = max_index
+
+        if method is None:
+            method = self.method
+        if method == "use-distribution":
+            action_index = np.random.choice(range(16), p=probs[0])
+
+        elif method == "most-probable":
+            action_index = np.argmax(probs)
+
+        else:
+            raise Exception(f"There is no method named {method}")
+        
         action = action_index//4, action_index%4 #TODO: generalize
 
         return action
