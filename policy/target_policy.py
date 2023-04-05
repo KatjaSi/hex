@@ -50,11 +50,13 @@ class ANET():
         else:
             self.model = model
 
-    def fit(self, X, y, epochs=10, batch_size=32):
-        x_valid = X[-10:] # 10 last
-        y_valid = y[-10:] # 10 last elements, they will be the new elements , most recently added
-        valid_loss = K.mean(K.categorical_crossentropy(y_valid, self.model.predict(x_valid)))
-        print(f"Validation loss is {valid_loss}")
+    def fit(self, X, y, epochs=10, batch_size=32, validation_data=(None, None)):
+        #x_valid = X[-10:] # 10 last
+        #y_valid = y[-10:] # 10 last elements, they will be the new elements , most recently added
+        x_valid, y_valid = validation_data
+        if x_valid is not None and y_valid is not None:
+            valid_loss = K.mean(K.categorical_crossentropy(y_valid, self.model.predict(x_valid)))
+            print(f"Validation loss is {valid_loss}")
         self.model.fit(X, y, epochs=epochs, batch_size=batch_size)
 
     def predict(self, state_1D): 

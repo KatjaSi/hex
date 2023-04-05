@@ -70,10 +70,12 @@ def run_RL_algorithm(g_a, anet:ANET, rbuf:RBUF, interval:int):
 
         # Train ANET on a random minibatch of cases from RBUF
         X, y = rbuf.get_training_data()
-        batch_size = min(len(X), 50)  # Set the minibatch size
+        batch_size = min(len(X), 50) if len(X) <500 else 100 # Set the minibatch size
         indices = np.random.choice(len(X), batch_size, replace=False)
         X_batch, y_batch = X[indices], y[indices]
-        anet.fit(X_batch, y_batch, epochs=50)
+
+        valid_data =  X[-10:], y[:-10] # the last added data
+        anet.fit(X_batch, y_batch, epochs=50, validation_data=valid_data)
         #anet.fit(*rbuf.get_training_data(), epochs=50)
         print(i)
         if i%interval == 0:
