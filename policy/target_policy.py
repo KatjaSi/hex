@@ -17,6 +17,8 @@ from keras.models import Model, Sequential, load_model
 from typing import List, Tuple
 from hexgame import HexGameState
 import keras.backend as K
+from keras.optimizers import Adam
+
 
 def random_target_policy(state: Tuple[int]|HexGameState, actions: List[Tuple[int] | int]):
     """
@@ -40,12 +42,13 @@ class ANET():
             #self.model.add(layers.Dense(units=16, activation='softmax'))
             #self.model.compile(loss='categorical_crossentropy',  optimizer='adam'), 
             model = Sequential()
-            model.add(Dense(64, input_dim=17, activation='relu', kernel_regularizer=l2(0.001)))
-            model.add(Dropout(0.5))
-            model.add(Dense(32, activation='relu', kernel_regularizer=l2(0.001)))
-            model.add(Dropout(0.5))
+            model.add(Dense(64, input_dim=17, activation='relu')) #, kernel_regularizer=l2(0.001)
+            model.add(Dropout(0.2))
+            model.add(Dense(32, activation='relu')) #, kernel_regularizer=l2(0.001)
+            model.add(Dropout(0.1))
             model.add(Dense(16, activation='softmax'))
-            model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+            optimizer = Adam(learning_rate=0.0001)
+            model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
             self.model = model
         else:
             self.model = model
