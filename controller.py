@@ -127,16 +127,16 @@ class ANET_Controller:
 
     def on_canvas_click(self, event, item):
         board_index = self.item_to_board_index(item[0])
-        #if self.game_model.get_player_to_move() == 1: #Player.BLACK:
-         #   self.game_model.make_move(board_index)
-          #  self.mcts.reset_root(board_index) # to be removed maybe
-           # self.game_view.canvas.itemconfig(item, fill='black')
-            #if self.game_model.black_is_won():
-             #   self.game_view.won_label.config(text = "BLACK won!")
-              #  self.game_view.end_game()
-            #self.game_view.player_label.config(text = "RED's turn")
-        #else:
-        if self.game_model.get_player_to_move() == 2:
+        if self.game_model.get_player_to_move() == 1: #Player.BLACK:
+            self.game_model.make_move(board_index)
+            self.mcts.reset_root(board_index) # to be removed maybe
+            self.game_view.canvas.itemconfig(item, fill='black')
+            if self.game_model.black_is_won():
+                self.game_view.won_label.config(text = "BLACK won!")
+                self.game_view.end_game()
+            self.game_view.player_label.config(text = "RED's turn")
+        else:
+            #self.game_model.get_player_to_move() == 2:
             self.game_model.make_move(board_index)
             self.game_view.canvas.itemconfig(item, fill='red')
             if self.game_model.red_is_won():
@@ -145,8 +145,7 @@ class ANET_Controller:
                 return
             self.game_view.player_label.config(text = "BLACK's turn")
 
-            # generate pc move
-            self.on_generate_move()
+
         
 
     def item_to_board_index(self, item_index):

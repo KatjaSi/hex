@@ -38,6 +38,8 @@ class MCTS:
         self.player = player
         self.M = M
 
+        self.expand_node(self.root)
+
     def expand_node(self, node: Node, limit: int | None = None) -> None:
         #successor_states = self.sm.generate_child_states(state=node.state, limit=limit)
         actions = self.sm.get_all_legal_actions(node.state)
