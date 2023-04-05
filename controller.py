@@ -24,7 +24,7 @@ class Controller:
             
             self.game_model.make_move(move)
             self.mcts.reset_root(move)
-            self.mcts.M = int(self.mcts.M*1.2)
+            self.mcts.M = int(self.mcts.M)
             self.game_view.player_label.config(text = "RED's turn")
             if self.game_model.black_is_won():
                     self.game_view.won_label.config(text = "BLACK won!")
@@ -39,7 +39,7 @@ class Controller:
             self.game_view.canvas.itemconfig(item, fill='red')
             self.game_model.make_move(move)
             self.mcts.reset_root(move)
-            self.mcts.M = int(self.mcts.M*1.2)
+            self.mcts.M = int(self.mcts.M)
             self.game_view.player_label.config(text = "BLACK's turn")
             if self.game_model.red_is_won():
                     self.game_view.won_label.config(text = "RED won!")
@@ -51,16 +51,15 @@ class Controller:
                 
     def on_canvas_click(self, event, item):
         board_index = self.item_to_board_index(item[0])
-        #if self.game_model.get_player_to_move() == 1: #Player.BLACK:
-         #   self.game_model.make_move(board_index)
-          #  self.mcts.reset_root(board_index) # to be removed maybe
-           # self.game_view.canvas.itemconfig(item, fill='black')
-            #if self.game_model.black_is_won():
-             #   self.game_view.won_label.config(text = "BLACK won!")
-              #  self.game_view.end_game()
-            #self.game_view.player_label.config(text = "RED's turn")
-        #else:
-        if self.game_model.get_player_to_move() == 2:
+        if self.game_model.get_player_to_move() == 1: #Player.BLACK:
+            self.game_model.make_move(board_index)
+            self.mcts.reset_root(board_index) # to be removed maybe
+            self.game_view.canvas.itemconfig(item, fill='black')
+            if self.game_model.black_is_won():
+                self.game_view.won_label.config(text = "BLACK won!")
+                self.game_view.end_game()
+            self.game_view.player_label.config(text = "RED's turn")
+        else:
             self.game_model.make_move(board_index)
             self.mcts.reset_root(board_index) # to be removed maybe
             self.game_view.canvas.itemconfig(item, fill='red')
@@ -92,10 +91,11 @@ class Controller:
 # Anet controller
 class ANET_Controller:
 
-    def __init__(self, game_view:Hex, game_model:HexGame, anet:ANET):
+    def __init__(self, game_view:Hex, game_model:HexGame, anet1:ANET, anet2:ANET):
         self.game_view = game_view 
         self.game_model = game_model
-        self.anet = anet
+        self.anet1 = anet1
+        self.anet2 = anet2
         self.game_view.add_listener(self) 
 
     def start_game(self):
@@ -103,7 +103,7 @@ class ANET_Controller:
 
     def on_generate_move(self):
         if self.game_model.get_player_to_move() == 1:
-            move = self.anet.target_policy(state=self.game_model.state, actions=self.game_model.get_legal_moves())
+            move = self.anet1.target_policy(state=self.game_model.state, actions=self.game_model.get_legal_moves())
             item = self.board_index_to_item(move)
             self.game_view.canvas.itemconfig(item, fill='black')
             self.game_model.make_move(move)
@@ -114,7 +114,7 @@ class ANET_Controller:
                     return
 
         else:
-            move = self.anet.target_policy(state=self.game_model.state, actions=self.game_model.get_legal_moves())
+            move = self.anet2.target_policy(state=self.game_model.state, actions=self.game_model.get_legal_moves())
             item = self.board_index_to_item(move)
             self.game_view.canvas.itemconfig(item, fill='red')
             self.game_model.make_move(move)

@@ -34,14 +34,14 @@ class ANET():
             self.model.add(layers.Dense(128, activation='relu', kernel_initializer=initializers.RandomNormal(stddev=0.01), bias_initializer=initializers.Zeros()))
             self.model.add(layers.Dense(64, activation='relu', kernel_initializer=initializers.RandomNormal(stddev=0.01), bias_initializer=initializers.Zeros()))
             self.model.add(layers.Dense(units=16, activation='softmax'))
-            self.model.compile(loss='categorical_crossentropy')
+            self.model.compile(loss='categorical_crossentropy',  optimizer='adam'), 
         else:
             self.model = model
 
     def fit(self, X, y, epochs=10, batch_size=32):
         self.model.fit(X, y, epochs=epochs, batch_size=batch_size)
 
-    def predict(self, state_1D): # [sum([[player]] + board1D,[])]
+    def predict(self, state_1D): 
         output = self.model.predict(state_1D.reshape((1,-1)), verbose=0)
         return output
 
