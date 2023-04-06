@@ -113,6 +113,10 @@ class ANET_Controller:
                     self.game_view.won_label.config(text = "BLACK won!")
                     self.game_view.end_game()
                     return
+            else:
+                self.game_view.canvas.update()
+                time.sleep(1)
+                self.on_generate_move()
 
         else:
             move = self.target_policy2(state=self.game_model.state, actions=self.game_model.get_legal_moves())
@@ -124,6 +128,10 @@ class ANET_Controller:
                     self.game_view.won_label.config(text = "RED won!")
                     self.game_view.end_game()
                     return
+            else:
+                self.game_view.canvas.update()
+                time.sleep(1)
+                self.on_generate_move()
 
     def on_canvas_click(self, event, item):
         board_index = self.item_to_board_index(item[0])

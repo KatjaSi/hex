@@ -5,6 +5,7 @@ the behavior policy (default policy =  the policy used to perform rollouts) is a
 In this project, a neural network (ANET) constitutes the target policy. It takes a board
 state as input and produces a probability distribution over all possible moves (from that state) as output
 """
+import math
 import random
 import numpy as np
 from random import randint
@@ -31,9 +32,10 @@ def random_target_policy(state: Tuple[int]|HexGameState, actions: List[Tuple[int
 
 class ANET():
 
-    def __init__(self, model=None, input_size=17, eps=0.2,  method="most-probable") -> None:
+    def __init__(self, board_size, model=None, eps=0.2,  method="most-probable") -> None:
         self.eps = eps
         self.method = method
+        self.board_size = board_size
         if model is None:
             #self.model = Sequential()
             #self.model.add(layers.Input(shape=(input_size,))) # 1 neuron for player, rest for board
@@ -42,11 +44,11 @@ class ANET():
             #self.model.add(layers.Dense(units=16, activation='softmax'))
             #self.model.compile(loss='categorical_crossentropy',  optimizer='adam'), 
             model = Sequential()
-            model.add(Dense(64, input_dim=17, activation='relu')) #, kernel_regularizer=l2(0.001)
+            model.add(Dense(64, input_dim=board_size**2+1, activation='relu')) #, kernel_regularizer=l2(0.001)
             model.add(Dropout(0.2))
             model.add(Dense(32, activation='relu')) #, kernel_regularizer=l2(0.001)
             model.add(Dropout(0.1))
-            model.add(Dense(16, activation='softmax'))
+            model.add(Dense(board_size**2, activation='softmax'))
             optimizer = Adam(learning_rate=0.0005)
             model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
             self.model = model
@@ -54,8 +56,6 @@ class ANET():
             self.model = model
 
     def fit(self, X, y, epochs=10, batch_size=32, validation_data=(None, None)):
-        #x_valid = X[-10:] # 10 last
-        #y_valid = y[-10:] # 10 last elements, they will be the new elements , most recently added
         x_valid, y_valid = validation_data
         if x_valid is not None and y_valid is not None:
             valid_loss = K.mean(K.categorical_crossentropy(y_valid, self.model.predict(x_valid)))
@@ -74,8 +74,8 @@ class ANET():
         """
         eps = self.eps
         probs = self.predict(state.to_1D()) # TODO: ?
-        action_anet_outputs = [action[0]*4+action[1] for action in actions]
-        mask = [1 if i in action_anet_outputs else 0 for i in range(16)]
+        action_anet_outputs = [action[0]*self.board_size+action[1] for action in actions]
+        mask = [1 if i in action_anet_outputs else 0 for i in range(self.board_size**2)]
         probs = probs *mask
         probs /= np.sum(probs) 
         
@@ -86,7 +86,7 @@ class ANET():
         if method is None:
             method = self.method
         if method == "use-distribution":
-            action_index = np.random.choice(range(16), p=probs[0])
+            action_index = np.random.choice(range(self.board_size**2), p=probs[0])
 
         elif method == "most-probable":
             action_index = np.argmax(probs)
@@ -94,7 +94,7 @@ class ANET():
         else:
             raise Exception(f"There is no method named {method}")
         
-        action = action_index//4, action_index%4 #TODO: generalize
+        action = action_index//self.board_size, action_index%self.board_size #TODO: generalize
 
         return action
     
@@ -104,6 +104,8 @@ class ANET():
     @staticmethod
     def load(path):
         model = load_model(path)
-        anet = ANET(model)
+        input_shape = model.input_shape
+        boerd_size = int(math.sqrt(input_shape[1]-1))
+        anet = ANET(board_size=boerd_size, model=model)
         return anet
 

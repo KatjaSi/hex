@@ -54,10 +54,11 @@ class RBUF:
 
 def run_RL_algorithm(g_a, anet:ANET, rbuf:RBUF, interval:int):
     rbuf.clear()
+    board_size = anet.board_size
     for i in range(g_a):
-        game = HexGame(4)
-        state = HexStateManager.generate_initial_state(size=4) # TODO:generalize
-        mcts = MCTS(SM=HexStateManager, state=state, tree_policy=(max_tree_policy, min_tree_policy), target_policy=anet.target_policy, M=200)
+        game = HexGame(board_size)
+        state = HexStateManager.generate_initial_state(size=board_size) # TODO:generalize
+        mcts = MCTS(SM=HexStateManager, state=state, tree_policy=(max_tree_policy, min_tree_policy), target_policy=anet.target_policy, M=20)
         while not game.is_game_finished():
             state = mcts.root.state
             mcts.simulate()
@@ -92,9 +93,9 @@ def run_RL_algorithm(g_a, anet:ANET, rbuf:RBUF, interval:int):
 #prediction = anet.predict(state_1D=state1D)
 #print(prediction)
 
-anet = ANET(input_size=17, method="use-distribution") #1 +7*7
+anet = ANET(board_size=5, method="use-distribution") #1 +7*7
 
 #anet = ANET.load("anet28.h5") #ANET.load("C:\\Users\\Roger\\Desktop\\vaar2023\\hex\\anet28.h5") #C:\Users\Roger\Desktop\vaar2023\anet28.h5
-anet.eps = 0.2
-rbuf = RBUF(4)
+anet.eps = 0.05
+rbuf = RBUF(5)
 run_RL_algorithm(200,anet, rbuf, interval=2)

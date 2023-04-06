@@ -13,7 +13,7 @@ from policy.target_policy import ANET
 anet1 = ANET.load("anets/anet2.h5")
 anet1.eps = 0.2
 anet1.method =  "most-probable"
-anet2 = ANET.load("anets/anet22.h5")
+anet2 = ANET.load("anets/anet20.h5")
 anet2.eps = 0
 anet2.method = "most-probable"
 
