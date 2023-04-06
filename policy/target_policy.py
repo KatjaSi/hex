@@ -47,7 +47,7 @@ class ANET():
             model.add(Dense(32, activation='relu')) #, kernel_regularizer=l2(0.001)
             model.add(Dropout(0.1))
             model.add(Dense(16, activation='softmax'))
-            optimizer = Adam(learning_rate=0.0001)
+            optimizer = Adam(learning_rate=0.0005)
             model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
             self.model = model
         else:

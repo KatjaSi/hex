@@ -10,17 +10,17 @@ game_view = Hex(size=4)
 
 from policy.target_policy import ANET
 
-anet1 = ANET.load("anet20.h5")
-anet1.eps = 0
-anet1.method = "use-distribution"
-anet2 = ANET.load("anet0.h5")
+anet1 = ANET.load("anets/anet2.h5")
+anet1.eps = 0.2
+anet1.method =  "most-probable"
+anet2 = ANET.load("anets/anet22.h5")
 anet2.eps = 0
-anet2.method = "use-distribution"
+anet2.method = "most-probable"
 
-s_init = HexStateManager.generate_initial_state(size=4)
-mcts = MCTS(SM=HexStateManager, state=s_init, tree_policy=(max_tree_policy, min_tree_policy), target_policy=anet1.target_policy, M=200)
-controller = Controller(game_view=game_view, game_model=game, mcts=mcts)
-controller.start_game()
+#s_init = HexStateManager.generate_initial_state(size=4)
+#mcts = MCTS(SM=HexStateManager, state=s_init, tree_policy=(max_tree_policy, min_tree_policy), target_policy=anet1.target_policy, M=200)
+#controller = Controller(game_view=game_view, game_model=game, mcts=mcts)
+#controller.start_game()
 
-#anet_controller = ANET_Controller(game_view=game_view, game_model=game, target_policy1 =anet1.target_policy, target_policy2=anet2.target_policy)
-#anet_controller.start_game()
+anet_controller = ANET_Controller(game_view=game_view, game_model=game, target_policy1 =anet1.target_policy, target_policy2=anet2.target_policy)
+anet_controller.start_game()

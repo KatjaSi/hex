@@ -28,7 +28,7 @@ class RBUF:
         """
         max_val = np.max(list(D.values()))
         for k in D:
-            D[k] -= max_val
+            D[k] = D[k]/ max_val
         x = state_1D 
         all_y_valls = np.array(list(D.values()))
         #all_y_valls = all_y_valls-max(all_y_valls) # normalize so not to overflow exp
@@ -49,6 +49,7 @@ class RBUF:
     
     def save(self, path):
         np.save(f'{path}/X.npy', self.X)    
+        np.save(f'{path}/y.npy', self.X) 
         
 
 def run_RL_algorithm(g_a, anet:ANET, rbuf:RBUF, interval:int):
@@ -56,7 +57,7 @@ def run_RL_algorithm(g_a, anet:ANET, rbuf:RBUF, interval:int):
     for i in range(g_a):
         game = HexGame(4)
         state = HexStateManager.generate_initial_state(size=4) # TODO:generalize
-        mcts = MCTS(SM=HexStateManager, state=state, tree_policy=(max_tree_policy, min_tree_policy), target_policy=anet.target_policy, M=200)
+        mcts = MCTS(SM=HexStateManager, state=state, tree_policy=(max_tree_policy, min_tree_policy), target_policy=anet.target_policy, M=10)
         while not game.is_game_finished():
             state = mcts.root.state
             mcts.simulate()
@@ -77,11 +78,13 @@ def run_RL_algorithm(g_a, anet:ANET, rbuf:RBUF, interval:int):
         valid_data =  X[-10:], y[-10:] # the last added data
         anet.fit(X_batch, y_batch, epochs=50, validation_data=valid_data)
         #anet.fit(*rbuf.get_training_data(), epochs=50)
+        mcts.target_policy = anet.target_policy #this line added
         print(i)
         if i%interval == 0:
-            anet.save(f"anet{i}.h5")
+            anet.save(f"anets/anet{i}.h5")
+            rbuf.save("rbuf")
     
-    anet.save("anet_final.h5")
+    anet.save("anets/anet_final.h5")
 
 #state = HexStateManager.generate_initial_state(size=7)
 #state1D = state.to_1D()
@@ -89,7 +92,7 @@ def run_RL_algorithm(g_a, anet:ANET, rbuf:RBUF, interval:int):
 #prediction = anet.predict(state_1D=state1D)
 #print(prediction)
 
-anet = ANET(input_size=17) #1 +7*7
+anet = ANET(input_size=17, method="use-distribution") #1 +7*7
 
 #anet = ANET.load("anet28.h5") #ANET.load("C:\\Users\\Roger\\Desktop\\vaar2023\\hex\\anet28.h5") #C:\Users\Roger\Desktop\vaar2023\anet28.h5
 anet.eps = 0.2
