@@ -23,15 +23,17 @@ class HexGameState:
 
     def __str__(self):
         return f"player: {self.player}\nboard: {self.board}\nblack unions: {self.black_unions}\nred unions: {self.red_unions}"
+    
+
  
 class HexStateManager:
 
     NEIGHBOUR_INDICES = [(-1,0), (-1,1), (0,-1), (0,1), (1,-1), (1,0)]
 
     @staticmethod
-    def generate_initial_state(size) -> HexGameState:
+    def generate_initial_state(size, player) -> HexGameState:
         board = [[0 for _ in range(size)] for _ in range(size)]
-        return HexGameState(player=1, board=board, black_unions=list(), red_unions=list())
+        return HexGameState(player=player, board=board, black_unions=list(), red_unions=list())
     
     @staticmethod
     def generate_child_states(state: HexGameState, limit: int|None = None) -> List[HexGameState]:
@@ -176,8 +178,8 @@ class HexStateManager:
 
 class HexGame():
 
-    def __init__(self, size):
-        self.state = HexStateManager.generate_initial_state(size=size)
+    def __init__(self, size, player):
+        self.state = HexStateManager.generate_initial_state(size=size, player=player)
         self.size = len(self.state.board)
         self.state_manager = HexStateManager
 
@@ -202,30 +204,3 @@ class HexGame():
 
     def get_winner(self):
         return 1 if self.black_is_won() else 2
-
-
-
-def main() -> None:
-    #game = HexGame(3)
-    #game.make_move((1,0)) # black
-    #game.make_move((0,0)) # red
-    #game.make_move((2,0)) # black
-    #game.make_move((0,2)) # red
-    #game.make_move((1,2)) # b
-    #game.make_move((2,2)) # red
-    #game.make_move((1,1)) # b
-
-    #state_0 = HexStateManager.generate_initial_state(size=4)
-    #print(state_0)
-    #child_state = HexStateManager.generate_child_state(state=state_0, action=(3,3))
-    #print(child_state)
-    state = HexStateManager.generate_initial_state(size=5)
-    print(state)
-    state1 = HexStateManager.generate_child_state(state=state, action=(0,1))
-    print(state1)
-    state2 = HexStateManager.generate_child_state(state=state1, action=(0,0))
-    print(state2)
-
-if __name__ == '__main__':
-    main()
-

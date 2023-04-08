@@ -7,6 +7,7 @@ state as input and produces a probability distribution over all possible moves (
 """
 import math
 import random
+import pickle
 import numpy as np
 from random import randint
 
@@ -55,12 +56,12 @@ class ANET():
         else:
             self.model = model
 
-    def fit(self, X, y, epochs=10, batch_size=32, validation_data=(None, None)):
+    def fit(self, X, y, epochs=50, batch_size=16, validation_data=(None, None)):
         x_valid, y_valid = validation_data
         if x_valid is not None and y_valid is not None:
             valid_loss = K.mean(K.categorical_crossentropy(y_valid, self.model.predict(x_valid)))
             print(f"Validation loss is {valid_loss}")
-        self.model.fit(X, y, epochs=epochs, batch_size=batch_size)
+        self.model.fit(X, y, model__epochs=epochs, model__batch_size=batch_size)  #TODO : generalize
 
     def predict(self, state_1D): 
         output = self.model.predict(state_1D.reshape((1,-1)), verbose=0)
@@ -73,7 +74,7 @@ class ANET():
         and with a probability of 1−ε, the move corresponding to the highest value in D is chosen."
         """
         eps = self.eps
-        probs = self.predict(state.to_1D()) # TODO: ?
+        probs = self.predict(state.to_1D()) 
         action_anet_outputs = [action[0]*self.board_size+action[1] for action in actions]
         mask = [1 if i in action_anet_outputs else 0 for i in range(self.board_size**2)]
         probs = probs *mask
@@ -98,14 +99,23 @@ class ANET():
 
         return action
     
-    def save(self, path):
-        self.model.save(path)
+    def save(self, path, is_pipeline=False):
+        if is_pipeline:
+            with open(path, 'wb') as f:
+                pickle.dump(self.model, f)
+        else:
+            self.model.save(path)
 
     @staticmethod
-    def load(path):
+    def load(path, is_pipeline=False):
+        if is_pipeline:
+            with open(path, 'rb') as f:
+                pipeline = pickle.load(f)
+                board_size = pipeline.named_steps['preprocess'].kw_args['board_size']
+                return ANET(board_size=board_size, model=pipeline)
         model = load_model(path)
         input_shape = model.input_shape
-        boerd_size = int(math.sqrt(input_shape[1]-1))
-        anet = ANET(board_size=boerd_size, model=model)
+        board_size = int(math.sqrt(input_shape[1]-1))
+        anet = ANET(board_size=board_size, model=model)
         return anet
 
