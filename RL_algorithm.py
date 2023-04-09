@@ -77,7 +77,7 @@ def run_RL_algorithm(g_a, anet:ANET, rbuf:RBUF, interval:int):
         player = i % 2 +1
         game = HexGame(board_size, player=player)
         state = HexStateManager.generate_initial_state(size=board_size, player=player) # TODO:generalize
-        mcts = MCTS(SM=HexStateManager, state=state, tree_policy=(max_tree_policy, min_tree_policy), target_policy=anet.target_policy, M=200)
+        mcts = MCTS(SM=HexStateManager, state=state, tree_policy=(max_tree_policy, min_tree_policy), target_policy=anet.target_policy, M=300)
         while not game.is_game_finished():
             state = mcts.root.state
             mcts.simulate()

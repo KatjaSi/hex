@@ -107,6 +107,8 @@ class HexStateManager:
 
     @classmethod
     def black_is_won(cls, state: HexGameState):
+        # while player 2 wants a path
+        # between the northwest and southeast sides.
         # black wants to connect NW && SE
         size = len(state.board)
         for u in state.black_unions:
