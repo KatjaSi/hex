@@ -2,11 +2,13 @@ from typing import List
 from policy.target_policy import ANET
 from hexgame import HexGame, HexStateManager
 
-anet_1 = ANET.load("anets/anet0.h5", is_pipeline=False)
-anet_2 = ANET.load("anets/anet50.h5", is_pipeline=False)
-anet_3 = ANET.load("anets/anet100.h5", is_pipeline=False)
-anet_4 = ANET.load("anets/anet150.h5", is_pipeline=False)
-anet_5 = ANET.load("anets/anet196.h5", is_pipeline=False)
+anet_1 = ANET.load("anets_4x4_2xseq/anet0.h5", is_pipeline=True)
+anet_1.eps = 0.5
+anet_2 = ANET.load("anets_4x4_2xseq/anet18.h5", is_pipeline=True)
+anet_2.eps = 0.0
+#anet_3 = ANET.load("anets/anet100.h5", is_pipeline=False)
+#anet_4 = ANET.load("anets/anet150.h5", is_pipeline=False)
+#anet_5 = ANET.load("anets/anet196.h5", is_pipeline=False)
 
 
 
@@ -28,7 +30,7 @@ class Tournament:
             else:
                 move = target_policy_2(state=game.state, actions=game.get_legal_moves())
             game.make_move(move)
-
+        print(game.get_winner())
         return game.get_winner()
 
  
@@ -40,12 +42,14 @@ class Tournament:
         statistics['player_2'] = {'wins': 0, 'loses': 0}
 
         for i in range(G):
-            game = HexGame(board_size, player=i%2+1) # who starts
+            player = i%2+1 #who starts?
+            game = HexGame(board_size, player=player) # who starts
             winner = cls.play_one_game(player_1, player_2, game)
-            if winner == 1:
+            if winner == 1: #black
                 statistics['player_1']['wins'] +=1
                 statistics['player_2']['loses'] +=1
             else:
+                print(winner)
                 statistics['player_2']['wins'] +=1
                 statistics['player_1']['loses'] +=1
         
@@ -68,8 +72,13 @@ class Tournament:
     
         return statistics
 
-
-
-#statistics = Tournament.play_series(anet_1, anet_5, G=1000, board_size=3)
-statistics = Tournament.play_tournament([anet_1, anet_2, anet_4, anet_4, anet_5], G=50, board_size=3)
+#for _ in range(20):
+ #   winner = Tournament.play_one_game(anet_2, anet_1, HexGame(4, player=1))
+  #  print(winner)
+#statistics = Tournament.play_series(anet_2, anet_1, G=100, board_size=4)
+#statistics = Tournament.play_tournament([anet_1, anet_2, anet_4, anet_4, anet_5], G=50, board_size=3)
+#print(statistics)
+#statistics = Tournament.play_series(anet_1, anet_2, G=100, board_size=4)
+#print(statistics)
+statistics = Tournament.play_series(anet_2, anet_1, G=100, board_size=4)
 print(statistics)

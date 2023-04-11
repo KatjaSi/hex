@@ -15,7 +15,7 @@ from keras.layers import Dense, Dropout
 from keras.regularizers import l2
 
 from keras import initializers, optimizers
-from keras.models import Model, Sequential, load_model
+from keras.models import Sequential, load_model
 from typing import List, Tuple
 from hexgame import HexGameState
 import keras.backend as K
@@ -107,11 +107,11 @@ class ANET():
             self.model.save(path)
 
     @staticmethod
-    def load(path, is_pipeline=False):
+    def load(path, is_pipeline=False, board_size=4):
         if is_pipeline:
             with open(path, 'rb') as f:
                 pipeline = pickle.load(f)
-                board_size = pipeline.named_steps['preprocess'].kw_args['board_size']
+                #board_size = pipeline.named_steps['preprocess'].kw_args['board_size'] # for convolution
                 return ANET(board_size=board_size, model=pipeline)
         model = load_model(path)
         input_shape = model.input_shape

@@ -2,7 +2,9 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import FunctionTransformer
 import numpy as np
 import tensorflow as tf
-from hexgame import HexGameState
+from keras.models import Sequential
+from keras.layers import Dense, Dropout
+from keras.optimizers import Adam
 
 
 def build_conv_model(board_size):
@@ -31,7 +33,7 @@ def build_conv_model(board_size):
     dense2 = tf.keras.layers.Dense(16, activation='relu',kernel_initializer='random_uniform', bias_initializer='zeros')(dense1)
 
     # output layer with softmax activation
-    output = tf.keras.layers.Dense(16, activation='softmax',kernel_initializer='random_uniform', bias_initializer='zeros')(dense2)
+    output = tf.keras.layers.Dense(board_size**2, activation='softmax',kernel_initializer='random_uniform', bias_initializer='zeros')(dense2)
 
     # define the model with board and player inputs and output layer
     model = tf.keras.models.Model(inputs=[board_input, player_input], outputs=output)
@@ -48,12 +50,20 @@ def hexgamestate_to_input(state_1D_array, board_size):
     # for conv model with 2 conv channels and channel for player
     """
     input_players = state_1D_array[:,0]
-    input_boards = state_1D_array[:, 1:].reshape(-1, board_size, board_size) #todo: generalize
-
+    input_boards = state_1D_array[:, 1:].reshape(-1, board_size, board_size) 
     boards = np.stack([np.dstack((board == 1, board == 2)) for board in input_boards], axis=0)
     players = np.expand_dims(input_players, axis=1)
 
     return [boards, players]
+
+
+def hexgamestate_to_2xseq_input(state_1D_batch):
+    state_1d_batch = np.array(state_1D_batch)
+    state_2xd_batch = np.zeros((len(state_1d_batch), 33))
+    state_2xd_batch[:, 0] = (state_1d_batch[:, 0] == 1).astype(int) # 1 for player one (black for me), otherwise 0
+    state_2xd_batch[:, 1:17] = (state_1d_batch[:, 1:17] == 1).astype(int)
+    state_2xd_batch[:, 17:] = (state_1d_batch[:, 1:17] == 2).astype(int)
+    return state_2xd_batch
 
 
 
@@ -68,4 +78,35 @@ def build_conv_pipeline(board_size):
     ])
     return pipeline
 
+
+
+def build_seq_model(board_size):
+    model = Sequential()
+    model.add(Dense(128, input_dim=2*board_size**2+1, activation='relu')) #for 4x4 board 16+16 + 1
+    #model.add(Dropout(0.2))
+    model.add(Dense(64, activation='relu')) #, kernel_regularizer=l2(0.001)
+    #model.add(Dropout(0.1))
+    model.add(Dense(board_size**2, activation='softmax'))
+    optimizer = Adam(learning_rate=0.0005)
+    model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+    return model
+
+
+def build_seq_pipeline(board_size):
+    """
+    Builds a pipeline for the model that uses Dence layers with the specified bord size
+    """
+    model = build_seq_model(board_size)
+    pipeline = Pipeline([
+        ('preprocess', FunctionTransformer(hexgamestate_to_2xseq_input)),
+        ('model', model)
+    ])
+    return pipeline
+
+
+#state_1d_batch = [np.array([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), 
+            #      np.array([2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]), 
+             #     np.array([1, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0])]
+#state2xd = hexgamestate_to_2xseq_input(state_1D_batch=state_1d_batch)
+#print(state2xd)
 

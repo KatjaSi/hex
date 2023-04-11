@@ -7,7 +7,7 @@ from hexgame import HexStateManager, HexGame
 from mcts import MCTS
 from policy.tree_policy import max_tree_policy, min_tree_policy
 import tensorflow as tf
-from pipelines import build_conv_pipeline
+from pipelines import build_conv_pipeline, build_seq_pipeline
 
 class RBUF:
     """
@@ -73,7 +73,7 @@ class RBUF:
 def run_RL_algorithm(g_a, anet:ANET, rbuf:RBUF, interval:int):
     #rbuf.clear()
     board_size = anet.board_size
-    for i in range(13,g_a):
+    for i in range(19,g_a):
         player = i % 2 +1
         game = HexGame(board_size, player=player)
         state = HexStateManager.generate_initial_state(size=board_size, player=player) # TODO:generalize
@@ -99,19 +99,20 @@ def run_RL_algorithm(g_a, anet:ANET, rbuf:RBUF, interval:int):
         #anet.fit(*rbuf.get_training_data(), epochs=50)
         mcts.target_policy = anet.target_policy #this line added
         print(i)
-        rbuf.save("rbuf4x4")
+        rbuf.save("rbuf4x4_2xseq")
         if i%interval == 0:
             #anet.save(f"anets3x3conv/anet{i}.h5")
-            anet.save(f"anets_4x4/anet{i}.h5", is_pipeline=True)
+            anet.save(f"anets_4x4_2xseq/anet{i}.h5", is_pipeline=True)
             
     
     anet.save("anets/anet_final.h5")
 
-conv_pipeline = build_conv_pipeline(board_size=4)
-#anet = ANET(board_size=4, method="use-distribution", model = conv_pipeline) #1 +7*7
-anet = ANET.load("anets_4x4/anet12.h5", is_pipeline=True)
-anet.method = "use-distribution" #TODO: use-distribution?
-anet.eps = 0.02
+#conv_pipeline = build_conv_pipeline(board_size=4)
+seq_pipeline = build_seq_pipeline(board_size=4)
+#anet = ANET(board_size=4, method="use-distribution", model = seq_pipeline) #1 +7*7
+anet = ANET.load("anets_4x4_2xseq/anet18.h5", is_pipeline=True, board_size=4)
+anet.method = "use-distribution" 
+anet.eps = 0.05
 #rbuf = RBUF(4)
-rbuf = RBUF.load('rbuf4x4', board_size=4)
-run_RL_algorithm(201,anet, rbuf, interval=2)
+rbuf = RBUF.load('rbuf4x4_2xseq', board_size=4)
+run_RL_algorithm(201,anet, rbuf, interval=1)
