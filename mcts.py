@@ -1,5 +1,6 @@
 from __future__ import annotations
 import numpy as np
+import time
 from statemanager import StateManager
 from nimgame import NimStateManager, NimGame
 from hexgame import HexStateManager, HexGame
@@ -84,12 +85,16 @@ class MCTS:
                 
             
     def simulate(self):
+        start_time = time.time()
+        elapsed_time = 0
         if not self.root.is_expanded:
             self.expand_node(self.root) # expanding the root first, because i will need to choose one of 
         # the all possible actions from the root, so here it is more important to get all of them
-        for i in range(self.M):
-            if i % 10 == 0:
-                print(i)
+        #for i in range(self.M):
+         #   if i % 10 == 0:
+          #      print(i)
+        M = 0  
+        while elapsed_time < 5:  # loop until 1 second has elapsed
             node = self.tree_search()
             if self.sm.is_game_finished(node.state):
                  self.rollout(node)
@@ -100,6 +105,9 @@ class MCTS:
                 action = actions[randint(0, len(actions)-1)]
                 c = node.children[action]
                 self.rollout(c)
+            elapsed_time = time.time() - start_time  # calculate elapsed time
+            M += 1
+        print(M)
 
     def tree_search(self):
         node = self.root

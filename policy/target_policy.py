@@ -45,12 +45,12 @@ class ANET():
             #self.model.add(layers.Dense(units=16, activation='softmax'))
             #self.model.compile(loss='categorical_crossentropy',  optimizer='adam'), 
             model = Sequential()
-            model.add(Dense(64, input_dim=board_size**2+1, activation='relu')) #, kernel_regularizer=l2(0.001)
-            model.add(Dropout(0.2))
-            model.add(Dense(32, activation='relu')) #, kernel_regularizer=l2(0.001)
-            model.add(Dropout(0.1))
+            model.add(Dense(128, input_dim=board_size**2+1, activation='relu')) #, kernel_regularizer=l2(0.001)
+            #model.add(Dropout(0.2))
+            model.add(Dense(64, activation='relu')) #, kernel_regularizer=l2(0.001)
+          #  model.add(Dropout(0.1))
             model.add(Dense(board_size**2, activation='softmax'))
-            optimizer = Adam(learning_rate=0.0005)
+            optimizer = Adam(learning_rate=0.0005) #0.0001
             model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
             self.model = model
         else:
@@ -61,7 +61,7 @@ class ANET():
         if x_valid is not None and y_valid is not None:
             valid_loss = K.mean(K.categorical_crossentropy(y_valid, self.model.predict(x_valid)))
             print(f"Validation loss is {valid_loss}")
-        self.model.fit(X, y, model__epochs=epochs, model__batch_size=batch_size)  #TODO : generalize
+        self.model.fit(X, y, epochs=epochs, batch_size=batch_size)  #TODO : generalize
 
     def predict(self, state_1D): 
         output = self.model.predict(state_1D.reshape((1,-1)), verbose=0)

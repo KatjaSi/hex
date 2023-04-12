@@ -2,11 +2,16 @@ from typing import List
 from policy.target_policy import ANET
 from hexgame import HexGame, HexStateManager
 
-anet_1 = ANET.load("anets_4x4_2xseq/anet0.h5", is_pipeline=True)
-anet_1.eps = 0.5
-anet_2 = ANET.load("anets_4x4_2xseq/anet18.h5", is_pipeline=True)
+anet_1 = ANET.load("anets_4x4_seq/anet0.h5", is_pipeline=False)
+anet_1.eps = 0.9
+anet_2 = ANET.load("anets_4x4_seq/anet51.h5", is_pipeline=False)
 anet_2.eps = 0.0
-#anet_3 = ANET.load("anets/anet100.h5", is_pipeline=False)
+anet_3 = ANET.load("anets_4x4_seq/anet99.h5", is_pipeline=False)
+anet_3.eps = 0.0
+anet_4 = ANET.load("anets_4x4_seq/anet150.h5", is_pipeline=False)
+anet_4.eps = 0.0
+anet_5 = ANET.load("anets_4x4_seq/anet201.h5", is_pipeline=False)
+anet_5.eps = 0.0
 #anet_4 = ANET.load("anets/anet150.h5", is_pipeline=False)
 #anet_5 = ANET.load("anets/anet196.h5", is_pipeline=False)
 
@@ -24,13 +29,22 @@ class Tournament:
         target_policy_1 = player1.target_policy
         target_policy_2 = player2.target_policy
 
+        # first move is random
+        player1.eps = 0.8
+        player2.eps = 0.8
+        if game.get_player_to_move() == 1:
+            move = target_policy_1(state=game.state, actions=game.get_legal_moves())
+        else:
+            move = target_policy_2(state=game.state, actions=game.get_legal_moves())
+        game.make_move(move)
+        player1.eps = 0.0
+        player2.eps = 0.0
         while not game.is_game_finished():
             if game.get_player_to_move() == 1:
                 move = target_policy_1(state=game.state, actions=game.get_legal_moves())
             else:
                 move = target_policy_2(state=game.state, actions=game.get_legal_moves())
             game.make_move(move)
-        print(game.get_winner())
         return game.get_winner()
 
  
@@ -49,7 +63,6 @@ class Tournament:
                 statistics['player_1']['wins'] +=1
                 statistics['player_2']['loses'] +=1
             else:
-                print(winner)
                 statistics['player_2']['wins'] +=1
                 statistics['player_1']['loses'] +=1
         
@@ -80,5 +93,15 @@ class Tournament:
 #print(statistics)
 #statistics = Tournament.play_series(anet_1, anet_2, G=100, board_size=4)
 #print(statistics)
-statistics = Tournament.play_series(anet_2, anet_1, G=100, board_size=4)
+statistics = Tournament.play_series(anet_1, anet_2, G=100, board_size=4)
 print(statistics)
+statistics = Tournament.play_series(anet_1, anet_3, G=100, board_size=4)
+print(statistics)
+statistics = Tournament.play_series(anet_1, anet_4, G=100, board_size=4)
+print(statistics)
+statistics = Tournament.play_series(anet_1, anet_5, G=100, board_size=4)
+print(statistics)
+
+statistics = Tournament.play_tournament([anet_1, anet_2, anet_2, anet_4, anet_5], G=10, board_size=4)
+print(statistics)
+

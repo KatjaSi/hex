@@ -27,9 +27,6 @@ class RBUF:
         transforms the input information into the distribution over all the moves and then
         adds training case to the buffer
         """
-       # if len(self.X) > 500:
-        #    self.X = self.X[250:]
-         #   self.y = self.y[250:]
         max_val = np.max(list(D.values()))
         for k in D:
             D[k] = D[k]/ max_val
@@ -73,7 +70,7 @@ class RBUF:
 def run_RL_algorithm(g_a, anet:ANET, rbuf:RBUF, interval:int):
     #rbuf.clear()
     board_size = anet.board_size
-    for i in range(19,g_a):
+    for i in range(g_a):
         player = i % 2 +1
         game = HexGame(board_size, player=player)
         state = HexStateManager.generate_initial_state(size=board_size, player=player) # TODO:generalize
@@ -94,25 +91,23 @@ def run_RL_algorithm(g_a, anet:ANET, rbuf:RBUF, interval:int):
         indices = np.random.choice(len(X), batch_size, replace=False)
         X_batch, y_batch = X[indices], y[indices]
 
-        valid_data =  X[-8:], y[-8:] # the last added data
+        valid_data =  X[-15:], y[-15:] # the last added data
         anet.fit(X_batch, y_batch, epochs=40, validation_data=valid_data)
         #anet.fit(*rbuf.get_training_data(), epochs=50)
         mcts.target_policy = anet.target_policy #this line added
         print(i)
-        rbuf.save("rbuf4x4_2xseq")
+        rbuf.save("rbuf7x7")
         if i%interval == 0:
             #anet.save(f"anets3x3conv/anet{i}.h5")
-            anet.save(f"anets_4x4_2xseq/anet{i}.h5", is_pipeline=True)
+            anet.save(f"anets_7x7/anet{i}.h5", is_pipeline=False)
             
-    
-    anet.save("anets/anet_final.h5")
 
 #conv_pipeline = build_conv_pipeline(board_size=4)
-seq_pipeline = build_seq_pipeline(board_size=4)
-#anet = ANET(board_size=4, method="use-distribution", model = seq_pipeline) #1 +7*7
-anet = ANET.load("anets_4x4_2xseq/anet18.h5", is_pipeline=True, board_size=4)
+#seq_pipeline = build_seq_pipeline(board_size=4)
+anet = ANET(board_size=7, method="use-distribution") #1 +7*7
+#anet = ANET.load("anets_7x7/anet18.h5", is_pipeline=False, board_size=4)
 anet.method = "use-distribution" 
 anet.eps = 0.05
-#rbuf = RBUF(4)
-rbuf = RBUF.load('rbuf4x4_2xseq', board_size=4)
-run_RL_algorithm(201,anet, rbuf, interval=1)
+rbuf = RBUF(7)
+#rbuf = RBUF.load('rbuf7x7', board_size=7)
+run_RL_algorithm(201,anet, rbuf, interval=5)
