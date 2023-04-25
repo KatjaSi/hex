@@ -94,15 +94,18 @@ class MCTS:
          #   if i % 10 == 0:
           #      print(i)
         M = 0  
-        while elapsed_time < 5:  # loop until 1 second has elapsed
+        while elapsed_time < 2:  # loop until 1 second has elapsed
             node = self.tree_search()
             if self.sm.is_game_finished(node.state):
                  self.rollout(node)
             else:     
                 self.expand_node(node)
                 actions = list(node.children.keys())
-                # pick random
-                action = actions[randint(0, len(actions)-1)]
+                #action = actions[randint(0, len(actions)-1)]  
+                #      Tree search may go directly from tree-policy moves to a
+                #      rollout, without expanding the leaf node
+                state = node.state
+                action = self.target_policy(state, actions)
                 c = node.children[action]
                 self.rollout(c)
             elapsed_time = time.time() - start_time  # calculate elapsed time
@@ -112,8 +115,8 @@ class MCTS:
     def tree_search(self):
         node = self.root
         while not node.is_leaf():
-            node.visits += 1 #TODO: should it be here?
-            player = self.sm.get_player(node.state)#TODO: implement get player from the state with manager
+            node.visits += 1 
+            player = self.sm.get_player(node.state)
             if player == 1:
                 tree_policy = self.tree_policy_player1
             else:

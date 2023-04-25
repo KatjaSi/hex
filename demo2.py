@@ -1,28 +1,29 @@
+from policy.target_policy import ANET
+
 from typing import List
 from policy.target_policy import ANET
 from hexgame import HexGame, HexStateManager
+from rbuf import RBUF
 
-anet_0 = ANET(board_size=4, method="use-distribution")
+anet_0 = ANET(board_size=5, method="use-distribution")
 anet_0.method = 'most-probable'
-anet_0.eps = 0.2
-anet_0.save("anets_4x4_seq/anet_00.h5")
-anet_0 = ANET.load("anets_4x4_seq/anet_00.h5", is_pipeline=False)
-anet_1 = ANET.load("anets_4x4_seq/anet0.h5", is_pipeline=False)
-anet_1.eps = 0.9
+anet_0.save("anets_lm/anet_00.h5")
+anet_0 = ANET.load("anets_lm/anet_00.h5", is_pipeline=False)
+anet_1 = ANET.load("anets_lm/anet_00.h5", is_pipeline=False)
+
 #anet_2 = ANET.load("anets_4x4_seq/anet51.h5", is_pipeline=False)
-anet_2 = ANET.load("anets/anet50.h5")
-anet_2.eps = 0.0
+anet_2 = ANET.load("anets_lm/anet50.h5")
 #anet_3 = ANET.load("anets_4x4_seq/anet99.h5", is_pipeline=False)
-anet_3 = ANET.load("anets/anet100.h5")
-anet_3.eps = 0.0
+anet_3 = ANET.load("anets_lm/anet100.h5")
+#anet_3.eps = 0.0
 #anet_4 = ANET.load("anets_4x4_seq/anet150.h5", is_pipeline=False)
-anet_4 = ANET.load("anets/anet150.h5")
-anet_4.eps = 0.0
-anet_5 = ANET.load("anets_4x4_seq/anet201.h5", is_pipeline=False)
-anet_5.eps = 0.0
-anet_6 = ANET.load("anets/anet200.h5")
-anet_6.eps = 0.0
-#anet_4 = ANET.load("anets/anet150.h5", is_pipeline=False)
+anet_4 = ANET.load("anets_lm/anet150.h5")
+#anet_4.eps = 0.0
+#anet_5 = ANET.load("anets_4x4_seq/anet201.h5", is_pipeline=False)
+#anet_5.eps = 0.0
+anet_6 = ANET.load("anets_lm/anet200.h5")
+#anet_6.eps = 0.0
+#anet_4 = ANET.load("anets_lm/anet150.h5", is_pipeline=False)
 #anet_5 = ANET.load("anets/anet196.h5", is_pipeline=False)
 
 
@@ -40,8 +41,8 @@ class Tournament:
         target_policy_2 = player2.target_policy
 
         # first move is random
-        player1.eps = 0.8
-        player2.eps = 0.8
+        player1.eps = 0.99
+        player2.eps = 0.99
         if game.get_player_to_move() == 1:
             move = target_policy_1(state=game.state, actions=game.get_legal_moves())
         else:
@@ -95,26 +96,23 @@ class Tournament:
     
         return statistics
 
-#for _ in range(20):
- #   winner = Tournament.play_one_game(anet_2, anet_1, HexGame(4, player=1))
-  #  print(winner)
-#statistics = Tournament.play_series(anet_2, anet_1, G=100, board_size=4)
-#statistics = Tournament.play_tournament([anet_1, anet_2, anet_4, anet_4, anet_5], G=50, board_size=3)
-#print(statistics)
-#statistics = Tournament.play_series(anet_1, anet_2, G=100, board_size=4)
-#print(statistics)
-statistics = Tournament.play_series(anet_5, anet_0, G=50, board_size=4)
+#anet_1.eps = 0.9
+anet_2.eps = 0
+#for _ in range(10):
+ #   anet_0 = ANET(board_size=5)
+  #  anet_0.method = "use-distribution"
+   # statistics = Tournament.play_series(anet_4, anet_0, G=100, board_size=5)
+    #print(statistics)
+statistics = Tournament.play_series(anet_6, anet_0, G=100, board_size=5)
+print(statistics)    
+statistics = Tournament.play_series(anet_6, anet_2, G=100, board_size=5)
 print(statistics)
-statistics = Tournament.play_series(anet_5, anet_2, G=50, board_size=4)
+statistics = Tournament.play_series(anet_6, anet_3, G=100, board_size=5)
 print(statistics)
-statistics = Tournament.play_series(anet_5, anet_3, G=50, board_size=4)
+statistics = Tournament.play_series(anet_6, anet_4, G=100, board_size=5)
 print(statistics)
-statistics = Tournament.play_series(anet_5, anet_4, G=50, board_size=4)
+statistics = Tournament.play_series(anet_6, anet_6, G=100, board_size=5)
 print(statistics)
-statistics = Tournament.play_series(anet_5, anet_5, G=50, board_size=4)
-print(statistics)
-statistics = Tournament.play_series(anet_5, anet_6, G=50, board_size=4)
-print(statistics)
-#statistics = Tournament.play_tournament([anet_0, anet_2, anet_2, anet_4, anet_5], G=10, board_size=4)
-#print(statistics)
+
+#rbuf = RBUF.load('rbuf4x4', board_size=4)
 

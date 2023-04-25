@@ -22,7 +22,7 @@ def min_tree_policy(children):
     """
     return min(children.values(), key=lambda child: Q(child)-UCT(child)) 
 
-def UCT(child_node): # prior probability that should come from the actor NN ?
+def UCT(child_node): 
     N_s_a = child_node.visits
     N_s = child_node.parent.visits
     c=2
