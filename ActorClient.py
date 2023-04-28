@@ -140,7 +140,8 @@ class ActorClient:
 
         elif topic == 'authentication':
             if self.auth is None:
-                self.send(getpass.getpass('Enter API token: '))
+                #self.send(getpass.getpass('Enter API token: '))
+                self.send("9e26e57f7ca84c028f13166cb3d7b88c")
             else:
                 self.send(self.auth)
             self.logger.info('Authenticating...')
